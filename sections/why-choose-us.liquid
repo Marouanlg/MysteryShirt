@@ -1,26 +1,39 @@
 {%- liquid
   assign highlight_scheme = section.settings.highlight_color_scheme
+  assign table_scheme = section.settings.table_color_scheme
   assign check_color = section.settings.check_color
   assign minus_color = section.settings.minus_color
+  assign heading_align = section.settings.heading_alignment
+
+  case heading_align
+    when 'flex-start'
+      assign text_align = 'left'
+    when 'center'
+      assign text_align = 'center'
+    when 'flex-end'
+      assign text_align = 'right'
+  endcase
 -%}
 
 <div
   id="WhyChooseUs-{{ section.id }}"
-  class="why-choose-us color-{{ section.settings.color_scheme }}"
+  class="why-choose-us spacing-style color-{{ section.settings.color_scheme }}"
   style="
     {% render 'spacing-style', settings: section.settings %}
     --wcu-check-color: {{ check_color }};
     --wcu-minus-color: {{ minus_color }};
     --wcu-highlight-radius: {{ section.settings.highlight_border_radius }}px;
     --wcu-icon-size: {{ section.settings.icon_size }}px;
+    --wcu-heading-align: {{ heading_align }};
+    --wcu-heading-text-align: {{ text_align }};
   "
 >
-  <div class="why-choose-us__container section section--{{ section.settings.section_width }} spacing-style">
+  <div class="why-choose-us__container section section--{{ section.settings.section_width }}">
     {%- if section.settings.heading != blank -%}
       <h2 class="why-choose-us__heading">{{ section.settings.heading }}</h2>
     {%- endif -%}
 
-    <div class="why-choose-us__table" role="table" aria-label="{{ section.settings.heading | escape }}">
+    <div class="why-choose-us__table color-{{ table_scheme }}" role="table" aria-label="{{ section.settings.heading | escape }}">
       {%- comment -%} Header row {%- endcomment -%}
       <div class="why-choose-us__header" role="row">
         <div class="why-choose-us__header-cell why-choose-us__header-cell--features" role="columnheader">
@@ -106,14 +119,11 @@
 </div>
 
 {% stylesheet %}
-  .why-choose-us {
-    padding-block: var(--padding-block-start, 0) var(--padding-block-end, 0);
-  }
-
   .why-choose-us__container {
     display: flex;
     flex-direction: column;
     gap: 32px;
+    align-items: var(--wcu-heading-align, flex-start);
   }
 
   .why-choose-us__heading {
@@ -125,13 +135,17 @@
     text-transform: var(--font-h2--text-transform);
     color: var(--font-h2--color, var(--color-foreground-heading));
     margin: 0;
+    width: 100%;
+    max-width: 900px;
+    text-align: var(--wcu-heading-text-align, left);
   }
 
   .why-choose-us__table {
     display: grid;
     grid-template-columns: 1fr;
     width: 100%;
-    background: rgb(var(--color-background-rgb) / 0.6);
+    max-width: 900px;
+    background-color: var(--color-background);
     border-radius: 16px;
     overflow: hidden;
   }
@@ -201,10 +215,6 @@
     justify-content: flex-start;
     gap: 12px;
     padding-inline-start: 24px;
-  }
-
-  .why-choose-us__cell--brand {
-    /* continue the highlight column */
   }
 
   .why-choose-us__row:last-child .why-choose-us__cell--brand {
@@ -338,6 +348,26 @@
       "default": "Why choose us"
     },
     {
+      "type": "select",
+      "id": "heading_alignment",
+      "label": "Heading position",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "Left"
+        },
+        {
+          "value": "center",
+          "label": "Center"
+        },
+        {
+          "value": "flex-end",
+          "label": "Right"
+        }
+      ],
+      "default": "flex-start"
+    },
+    {
       "type": "text",
       "id": "brand_heading",
       "label": "Brand column heading",
@@ -384,6 +414,13 @@
       "id": "color_scheme",
       "label": "Section color scheme",
       "default": "scheme-1"
+    },
+    {
+      "type": "color_scheme",
+      "id": "table_color_scheme",
+      "label": "Table color scheme",
+      "default": "scheme-1",
+      "info": "Color scheme for the table card. Choose a different scheme to separate it from the background."
     },
     {
       "type": "color_scheme",
@@ -496,9 +533,11 @@
       ],
       "settings": {
         "heading": "Why choose us",
+        "heading_alignment": "flex-start",
         "brand_heading": "Us",
         "competitors_heading": "Others",
         "color_scheme": "scheme-1",
+        "table_color_scheme": "scheme-1",
         "highlight_color_scheme": "scheme-2",
         "highlight_border_radius": 20,
         "check_color": "#00C853",
