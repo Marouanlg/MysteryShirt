@@ -26,9 +26,12 @@
     --wcu-icon-size: {{ section.settings.icon_size }}px;
     --wcu-heading-align: {{ heading_align }};
     --wcu-heading-text-align: {{ text_align }};
-    --wcu-header-bg: {{ section.settings.header_transparent | yepnope: 'transparent', 'var(--color-background)' }};
     --wcu-brand-padding-block: {{ section.settings.brand_padding_block }}px;
     --wcu-brand-padding-inline: {{ section.settings.brand_padding_inline }}px;
+    --wcu-brand-col-width: {{ section.settings.brand_col_width }}px;
+    --wcu-brand-overlap: {{ section.settings.brand_overlap }}px;
+    --wcu-brand-shadow-opacity: {{ section.settings.brand_shadow | times: 1.0 | divided_by: 100.0 }};
+    --wcu-row-divider-color: {{ section.settings.row_dividers | yepnope: section.settings.row_divider_color, 'transparent' }};
   "
 >
   <div class="why-choose-us__container section section--{{ section.settings.section_width }}">
@@ -36,35 +39,38 @@
       <h2 class="why-choose-us__heading">{{ section.settings.heading }}</h2>
     {%- endif -%}
 
-    <div class="why-choose-us__table color-{{ table_scheme }}" role="table" aria-label="{{ section.settings.heading | escape }}">
-      {%- comment -%} Header row {%- endcomment -%}
-      <div class="why-choose-us__header" role="row">
-        <div class="why-choose-us__header-cell why-choose-us__header-cell--features" role="columnheader">
-          <span class="visually-hidden">{{ 'general.accessibility.features' | t | default: 'Features' }}</span>
-        </div>
-        <div class="why-choose-us__header-cell why-choose-us__header-cell--brand color-{{ highlight_scheme }}" role="columnheader">
-          {%- if section.settings.brand_logo != blank -%}
-            {{
-              section.settings.brand_logo
-              | image_url: width: 200
-              | image_tag:
-                width: section.settings.brand_logo.width,
-                height: section.settings.brand_logo.height,
-                alt: section.settings.brand_heading,
-                class: 'why-choose-us__brand-logo',
-                loading: 'lazy'
-            }}
-          {%- else -%}
-            <span class="why-choose-us__brand-text">{{ section.settings.brand_heading }}</span>
-          {%- endif -%}
-        </div>
-        <div class="why-choose-us__header-cell why-choose-us__header-cell--others" role="columnheader">
-          <span class="why-choose-us__others-text">{{ section.settings.competitors_heading }}</span>
-        </div>
-      </div>
+    <div class="why-choose-us__card{% if section.settings.mobile_float %} why-choose-us__card--mobile-float{% endif %} color-{{ table_scheme }}">
+      {%- comment -%} Floating brand column background {%- endcomment -%}
+      <div class="why-choose-us__brand-float color-{{ highlight_scheme }}" aria-hidden="true"></div>
 
-      {%- comment -%} Feature rows {%- endcomment -%}
-      <div class="why-choose-us__body">
+      <div class="why-choose-us__table" role="table" aria-label="{{ section.settings.heading | escape }}">
+        {%- comment -%} Header row {%- endcomment -%}
+        <div class="why-choose-us__row why-choose-us__row--header" role="row">
+          <div class="why-choose-us__cell why-choose-us__cell--feature" role="columnheader">
+            <span class="visually-hidden">{{ 'general.accessibility.features' | t | default: 'Features' }}</span>
+          </div>
+          <div class="why-choose-us__cell why-choose-us__cell--brand" role="columnheader">
+            {%- if section.settings.brand_logo != blank -%}
+              {{
+                section.settings.brand_logo
+                | image_url: width: 200
+                | image_tag:
+                  width: section.settings.brand_logo.width,
+                  height: section.settings.brand_logo.height,
+                  alt: section.settings.brand_heading,
+                  class: 'why-choose-us__brand-logo',
+                  loading: 'lazy'
+              }}
+            {%- else -%}
+              <span class="why-choose-us__brand-text">{{ section.settings.brand_heading }}</span>
+            {%- endif -%}
+          </div>
+          <div class="why-choose-us__cell why-choose-us__cell--others" role="columnheader">
+            <span class="why-choose-us__others-text">{{ section.settings.competitors_heading }}</span>
+          </div>
+        </div>
+
+        {%- comment -%} Feature rows {%- endcomment -%}
         {%- for block in section.blocks -%}
           <div class="why-choose-us__row" role="row" {{ block.shopify_attributes }}>
             <div class="why-choose-us__cell why-choose-us__cell--feature" role="cell">
@@ -84,7 +90,7 @@
               {%- endif -%}
               <span class="why-choose-us__feature-text">{{ block.settings.text }}</span>
             </div>
-            <div class="why-choose-us__cell why-choose-us__cell--brand color-{{ highlight_scheme }}" role="cell">
+            <div class="why-choose-us__cell why-choose-us__cell--brand" role="cell">
               {%- if block.settings.us_has_feature -%}
                 <svg class="why-choose-us__check" width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                   <circle cx="16" cy="16" r="15" stroke="var(--wcu-check-color)" stroke-width="2"/>
@@ -122,6 +128,7 @@
 </div>
 
 {% stylesheet %}
+  /* ===== Container & Heading ===== */
   .why-choose-us__container {
     display: flex;
     flex-direction: column;
@@ -143,40 +150,91 @@
     text-align: var(--wcu-heading-text-align, left);
   }
 
-  .why-choose-us__table {
-    display: grid;
-    grid-template-columns: 1fr;
+  /* ===== Card (white table background) ===== */
+  .why-choose-us__card {
+    --wcu-others-col-width: 120px;
+    position: relative;
     width: 100%;
     max-width: 900px;
     background-color: var(--color-background);
     border-radius: 16px;
-    overflow: hidden;
+    padding: 16px 0;
+    overflow: visible;
   }
 
-  .why-choose-us__header {
+  /* ===== Floating brand column background ===== */
+  .why-choose-us__brand-float {
+    position: absolute;
+    top: calc(-1 * var(--wcu-brand-overlap, 24px));
+    bottom: calc(-1 * var(--wcu-brand-overlap, 24px));
+    right: var(--wcu-others-col-width);
+    width: var(--wcu-brand-col-width, 160px);
+    background-color: var(--color-background);
+    border-radius: var(--wcu-highlight-radius, 20px);
+    box-shadow: 0 8px 32px rgb(0 0 0 / var(--wcu-brand-shadow-opacity, 0.4));
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  /* ===== Table ===== */
+  .why-choose-us__table {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ===== Rows ===== */
+  .why-choose-us__row {
     display: grid;
-    grid-template-columns: 1fr minmax(100px, 160px) minmax(80px, 140px);
-    align-items: stretch;
+    grid-template-columns: 1fr var(--wcu-brand-col-width, 160px) var(--wcu-others-col-width);
+    align-items: center;
   }
 
-  .why-choose-us__header-cell {
+  /* Row dividers (feature + others columns only) */
+  .why-choose-us__row:not(.why-choose-us__row--header) + .why-choose-us__row > .why-choose-us__cell--feature,
+  .why-choose-us__row:not(.why-choose-us__row--header) + .why-choose-us__row > .why-choose-us__cell--others {
+    border-top: 1px solid var(--wcu-row-divider-color, transparent);
+  }
+
+  /* ===== Cells ===== */
+  .why-choose-us__cell {
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 24px 16px;
-    background-color: var(--wcu-header-bg, transparent);
+    padding: 22px 16px;
   }
 
-  .why-choose-us__header-cell--features {
+  /* Feature column */
+  .why-choose-us__cell--feature {
     justify-content: flex-start;
+    gap: 12px;
+    padding-inline-start: 28px;
   }
 
-  .why-choose-us__header-cell--brand {
-    border-radius: var(--wcu-highlight-radius) var(--wcu-highlight-radius) 0 0;
-    background-color: var(--color-background);
-    padding: var(--wcu-brand-padding-block) var(--wcu-brand-padding-inline);
+  /* Brand column cells — transparent so floating bg shows through */
+  .why-choose-us__cell--brand {
+    background: transparent;
+    padding: 22px var(--wcu-brand-padding-inline, 24px);
   }
 
+  .why-choose-us__row--header .why-choose-us__cell--brand {
+    padding: var(--wcu-brand-padding-block, 28px) var(--wcu-brand-padding-inline, 24px);
+  }
+
+  /* Others column */
+  .why-choose-us__cell--others {
+    background: transparent;
+  }
+
+  /* ===== Header row specifics ===== */
+  .why-choose-us__row--header .why-choose-us__cell--feature,
+  .why-choose-us__row--header .why-choose-us__cell--others {
+    background: transparent;
+    padding-block: 24px;
+  }
+
+  /* ===== Brand logo / text ===== */
   .why-choose-us__brand-logo {
     max-height: 56px;
     width: auto;
@@ -198,43 +256,11 @@
     color: var(--color-foreground-heading);
   }
 
-  .why-choose-us__body {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .why-choose-us__row {
-    display: grid;
-    grid-template-columns: 1fr minmax(100px, 160px) minmax(80px, 140px);
-    align-items: center;
-  }
-
-  .why-choose-us__cell {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px 16px;
-  }
-
-  .why-choose-us__cell--feature {
-    justify-content: flex-start;
-    gap: 12px;
-    padding-inline-start: 24px;
-  }
-
-  .why-choose-us__cell--brand {
-    padding: 20px var(--wcu-brand-padding-inline);
-  }
-
-  .why-choose-us__row:last-child .why-choose-us__cell--brand {
-    border-radius: 0 0 var(--wcu-highlight-radius) var(--wcu-highlight-radius);
-    padding-block-end: var(--wcu-brand-padding-block);
-  }
-
+  /* ===== Feature icons ===== */
   .why-choose-us__icon {
     flex-shrink: 0;
-    width: var(--wcu-icon-size);
-    height: var(--wcu-icon-size);
+    width: var(--wcu-icon-size, 36px);
+    height: var(--wcu-icon-size, 36px);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -254,6 +280,7 @@
     color: var(--color-foreground-heading);
   }
 
+  /* ===== Check / Minus icons ===== */
   .why-choose-us__check,
   .why-choose-us__minus {
     width: 32px;
@@ -261,23 +288,36 @@
     flex-shrink: 0;
   }
 
-  /* Mobile responsive */
+  /* ===== Mobile ===== */
   @media screen and (max-width: 749px) {
+    .why-choose-us__card {
+      --wcu-others-col-width: 80px;
+      padding: 12px 0;
+    }
+
     .why-choose-us__heading {
       font-size: calc(var(--font-h2--size) * 0.65);
     }
 
-    .why-choose-us__header {
-      grid-template-columns: 1fr minmax(60px, 90px) minmax(60px, 90px);
+    .why-choose-us__row {
+      grid-template-columns: 1fr var(--wcu-brand-col-width, 100px) var(--wcu-others-col-width);
     }
 
-    .why-choose-us__row {
-      grid-template-columns: 1fr minmax(60px, 90px) minmax(60px, 90px);
+    .why-choose-us__cell {
+      padding: 16px 8px;
     }
 
     .why-choose-us__cell--feature {
       padding-inline-start: 16px;
       gap: 8px;
+    }
+
+    .why-choose-us__cell--brand {
+      padding-inline: 12px;
+    }
+
+    .why-choose-us__row--header .why-choose-us__cell--brand {
+      padding: 20px 12px;
     }
 
     .why-choose-us__feature-text {
@@ -294,18 +334,17 @@
       height: 24px;
     }
 
-    .why-choose-us__cell {
-      padding: 14px 8px;
-    }
-
-    .why-choose-us__header-cell--brand,
-    .why-choose-us__cell--brand {
-      padding-inline: 16px;
-    }
-
     .why-choose-us__others-text,
     .why-choose-us__brand-text {
       font-size: 0.875rem;
+    }
+
+    /* Disable float on mobile unless opted in */
+    .why-choose-us__card:not(.why-choose-us__card--mobile-float) .why-choose-us__brand-float {
+      top: 0;
+      bottom: 0;
+      border-radius: 0;
+      box-shadow: none;
     }
   }
 {% endstylesheet %}
@@ -379,7 +418,7 @@
           "label": "Right"
         }
       ],
-      "default": "flex-start"
+      "default": "center"
     },
     {
       "type": "text",
@@ -406,7 +445,7 @@
     {
       "type": "select",
       "id": "section_width",
-      "label": "Width",
+      "label": "Section width",
       "options": [
         {
           "value": "page-width",
@@ -421,7 +460,7 @@
     },
     {
       "type": "header",
-      "content": "Appearance"
+      "content": "Colors"
     },
     {
       "type": "color_scheme",
@@ -432,52 +471,16 @@
     {
       "type": "color_scheme",
       "id": "table_color_scheme",
-      "label": "Table color scheme",
+      "label": "Table card color scheme",
       "default": "scheme-1",
-      "info": "Color scheme for the table card. Choose a different scheme to separate it from the background."
+      "info": "Background of the white comparison card."
     },
     {
       "type": "color_scheme",
       "id": "highlight_color_scheme",
       "label": "Brand column color scheme",
-      "default": "scheme-2"
-    },
-    {
-      "type": "range",
-      "id": "highlight_border_radius",
-      "label": "Brand column border radius",
-      "min": 0,
-      "max": 40,
-      "step": 2,
-      "unit": "px",
-      "default": 20
-    },
-    {
-      "type": "range",
-      "id": "brand_padding_block",
-      "label": "Brand column vertical padding",
-      "min": 8,
-      "max": 60,
-      "step": 2,
-      "unit": "px",
-      "default": 28
-    },
-    {
-      "type": "range",
-      "id": "brand_padding_inline",
-      "label": "Brand column horizontal padding",
-      "min": 8,
-      "max": 60,
-      "step": 2,
-      "unit": "px",
-      "default": 24
-    },
-    {
-      "type": "checkbox",
-      "id": "header_transparent",
-      "label": "Transparent header row",
-      "info": "Makes the header row background transparent. The brand column keeps its own color.",
-      "default": true
+      "default": "scheme-2",
+      "info": "Background and text color for the floating brand column."
     },
     {
       "type": "color",
@@ -492,6 +495,95 @@
       "default": "#999999"
     },
     {
+      "type": "checkbox",
+      "id": "row_dividers",
+      "label": "Show row dividers",
+      "default": false
+    },
+    {
+      "type": "color",
+      "id": "row_divider_color",
+      "label": "Row divider color",
+      "default": "#E6E6E6",
+      "info": "Only visible when row dividers are enabled."
+    },
+    {
+      "type": "header",
+      "content": "Brand column"
+    },
+    {
+      "type": "range",
+      "id": "brand_col_width",
+      "label": "Column width",
+      "min": 100,
+      "max": 240,
+      "step": 4,
+      "unit": "px",
+      "default": 160
+    },
+    {
+      "type": "range",
+      "id": "brand_overlap",
+      "label": "Float overlap",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "default": 24,
+      "info": "How much the brand column extends above and below the table card."
+    },
+    {
+      "type": "range",
+      "id": "brand_shadow",
+      "label": "Shadow intensity",
+      "min": 0,
+      "max": 100,
+      "step": 5,
+      "default": 40,
+      "info": "0 = no shadow, 100 = maximum shadow."
+    },
+    {
+      "type": "range",
+      "id": "highlight_border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 40,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "range",
+      "id": "brand_padding_block",
+      "label": "Vertical padding",
+      "min": 8,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "brand_padding_inline",
+      "label": "Horizontal padding",
+      "min": 8,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "checkbox",
+      "id": "mobile_float",
+      "label": "Keep float effect on mobile",
+      "default": false,
+      "info": "When disabled, the brand column flattens into the table on small screens."
+    },
+    {
+      "type": "header",
+      "content": "Icons"
+    },
+    {
       "type": "range",
       "id": "icon_size",
       "label": "Feature icon size",
@@ -503,7 +595,7 @@
     },
     {
       "type": "header",
-      "content": "Padding"
+      "content": "Section padding"
     },
     {
       "type": "range",
@@ -574,18 +666,24 @@
       ],
       "settings": {
         "heading": "Why choose us",
-        "heading_alignment": "flex-start",
+        "heading_alignment": "center",
         "brand_heading": "Us",
         "competitors_heading": "Others",
         "color_scheme": "scheme-1",
         "table_color_scheme": "scheme-1",
         "highlight_color_scheme": "scheme-2",
+        "check_color": "#00C853",
+        "minus_color": "#999999",
+        "row_dividers": false,
+        "row_divider_color": "#E6E6E6",
+        "brand_col_width": 160,
+        "brand_overlap": 24,
+        "brand_shadow": 40,
         "highlight_border_radius": 20,
         "brand_padding_block": 28,
         "brand_padding_inline": 24,
-        "header_transparent": true,
-        "check_color": "#00C853",
-        "minus_color": "#999999",
+        "mobile_float": false,
+        "icon_size": 36,
         "padding-block-start": 48,
         "padding-block-end": 48
       }
