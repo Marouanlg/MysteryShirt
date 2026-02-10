@@ -26,6 +26,9 @@
     --wcu-icon-size: {{ section.settings.icon_size }}px;
     --wcu-heading-align: {{ heading_align }};
     --wcu-heading-text-align: {{ text_align }};
+    --wcu-header-bg: {{ section.settings.header_transparent | yepnope: 'transparent', 'var(--color-background)' }};
+    --wcu-brand-padding-block: {{ section.settings.brand_padding_block }}px;
+    --wcu-brand-padding-inline: {{ section.settings.brand_padding_inline }}px;
   "
 >
   <div class="why-choose-us__container section section--{{ section.settings.section_width }}">
@@ -161,7 +164,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px 16px;
-    background-color: transparent;
+    background-color: var(--wcu-header-bg, transparent);
   }
 
   .why-choose-us__header-cell--features {
@@ -171,7 +174,7 @@
   .why-choose-us__header-cell--brand {
     border-radius: var(--wcu-highlight-radius) var(--wcu-highlight-radius) 0 0;
     background-color: var(--color-background);
-    padding: 28px 24px;
+    padding: var(--wcu-brand-padding-block) var(--wcu-brand-padding-inline);
   }
 
   .why-choose-us__brand-logo {
@@ -220,12 +223,12 @@
   }
 
   .why-choose-us__cell--brand {
-    padding: 20px 24px;
+    padding: 20px var(--wcu-brand-padding-inline);
   }
 
   .why-choose-us__row:last-child .why-choose-us__cell--brand {
     border-radius: 0 0 var(--wcu-highlight-radius) var(--wcu-highlight-radius);
-    padding-block-end: 32px;
+    padding-block-end: var(--wcu-brand-padding-block);
   }
 
   .why-choose-us__icon {
@@ -450,6 +453,33 @@
       "default": 20
     },
     {
+      "type": "range",
+      "id": "brand_padding_block",
+      "label": "Brand column vertical padding",
+      "min": 8,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 28
+    },
+    {
+      "type": "range",
+      "id": "brand_padding_inline",
+      "label": "Brand column horizontal padding",
+      "min": 8,
+      "max": 60,
+      "step": 2,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "checkbox",
+      "id": "header_transparent",
+      "label": "Transparent header row",
+      "info": "Makes the header row background transparent. The brand column keeps its own color.",
+      "default": true
+    },
+    {
       "type": "color",
       "id": "check_color",
       "label": "Checkmark color",
@@ -551,6 +581,9 @@
         "table_color_scheme": "scheme-1",
         "highlight_color_scheme": "scheme-2",
         "highlight_border_radius": 20,
+        "brand_padding_block": 28,
+        "brand_padding_inline": 24,
+        "header_transparent": true,
         "check_color": "#00C853",
         "minus_color": "#999999",
         "padding-block-start": 48,
