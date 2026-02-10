@@ -161,6 +161,7 @@
     align-items: center;
     justify-content: center;
     padding: 24px 16px;
+    background-color: transparent;
   }
 
   .why-choose-us__header-cell--features {
@@ -169,7 +170,8 @@
 
   .why-choose-us__header-cell--brand {
     border-radius: var(--wcu-highlight-radius) var(--wcu-highlight-radius) 0 0;
-    padding-block: 28px;
+    background-color: var(--color-background);
+    padding: 28px 24px;
   }
 
   .why-choose-us__brand-logo {
@@ -217,9 +219,13 @@
     padding-inline-start: 24px;
   }
 
+  .why-choose-us__cell--brand {
+    padding: 20px 24px;
+  }
+
   .why-choose-us__row:last-child .why-choose-us__cell--brand {
     border-radius: 0 0 var(--wcu-highlight-radius) var(--wcu-highlight-radius);
-    padding-block-end: 28px;
+    padding-block-end: 32px;
   }
 
   .why-choose-us__icon {
@@ -287,6 +293,11 @@
 
     .why-choose-us__cell {
       padding: 14px 8px;
+    }
+
+    .why-choose-us__header-cell--brand,
+    .why-choose-us__cell--brand {
+      padding-inline: 16px;
     }
 
     .why-choose-us__others-text,
