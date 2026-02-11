@@ -1,0 +1,472 @@
+{%- liquid
+  assign block_settings = block.settings
+  assign product_form_id = 'BuyButtons-ProductForm-section.id' | replace: 'section.id', section.id
+-%}
+
+<div
+  class="customize-selection spacing-style"
+  style="{% render 'spacing-style', settings: block_settings %}"
+  {{ block.shopify_attributes }}
+>
+  <!-- Trigger Button -->
+  <button
+    type="button"
+    class="customize-selection__trigger button button--{{ block_settings.button_style }}"
+    ref="triggerButton"
+    on:click="/openModal"
+    aria-haspopup="dialog"
+  >
+    <span class="svg-wrapper customize-selection__icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+    </span>
+    {{ block_settings.button_text }}
+  </button>
+
+  <!-- Hidden inputs that sync with the product form -->
+  <input type="hidden" name="properties[Nations to Avoid]" form="{{ product_form_id }}" ref="hiddenNations" value="">
+  <input type="hidden" name="properties[Teams to Avoid]" form="{{ product_form_id }}" ref="hiddenTeams" value="">
+  <input type="hidden" name="properties[Additional Criteria]" form="{{ product_form_id }}" ref="hiddenCriteria" value="">
+
+  <!-- Modal Overlay -->
+  <div class="customize-selection__overlay" ref="overlay" role="presentation" on:click="/closeModal" style="display:none;"></div>
+
+  <!-- Modal Dialog -->
+  <div
+    class="customize-selection__modal"
+    ref="modal"
+    role="dialog"
+    aria-modal="true"
+    aria-label="Customize Your Selection"
+    style="display:none;"
+  >
+    <div class="customize-selection__modal-inner">
+      <!-- Header -->
+      <div class="customize-selection__header">
+        <h2 class="customize-selection__title">Customize Your Selection</h2>
+        <button type="button" class="customize-selection__close" ref="closeButton" on:click="/closeModal" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Nations & Leagues Section -->
+      <div class="customize-selection__section">
+        <h3 class="customize-selection__section-title">NATIONS & LEAGUES TO AVOID (MAX 3):</h3>
+        <div class="customize-selection__nations-grid" ref="nationsGrid">
+          {% assign nations = "England|🏴󠁧󠁢󠁥󠁮󠁧󠁿,Spain|🇪🇸,Italy|🇮🇹,Germany|🇩🇪,France|🇫🇷,Holland|🇳🇱,India|🇮🇳,Egypt|🇪🇬,Ghana|🇬🇭,Argentina|🇦🇷,Turkey|🇹🇷,Mexico|🇲🇽,Brazil|🇧🇷,USA|🇺🇸,Portugal|🇵🇹" | split: "," %}
+          {% for nation_data in nations %}
+            {% assign parts = nation_data | split: "|" %}
+            {% assign nation_name = parts[0] %}
+            {% assign nation_flag = parts[1] %}
+            <label class="customize-selection__nation-item">
+              <input
+                type="checkbox"
+                class="customize-selection__nation-checkbox"
+                value="{{ nation_name }}"
+                on:change="/handleNationChange"
+              >
+              <span class="customize-selection__nation-flag">{{ nation_flag }}</span>
+              <span class="customize-selection__nation-name">{{ nation_name | upcase }}</span>
+            </label>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Teams to Avoid Section -->
+      <div class="customize-selection__section">
+        <h3 class="customize-selection__section-title">SPECIFIC TEAMS TO AVOID:</h3>
+        <textarea
+          class="customize-selection__textarea field__input"
+          ref="teamsTextarea"
+          placeholder="I would rather not receive a Barca shirt, because I am a Real Madrid fan!"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Additional Criteria Section -->
+      <div class="customize-selection__section">
+        <h3 class="customize-selection__section-title">ADDITIONAL CRITERIA:</h3>
+        <textarea
+          class="customize-selection__textarea field__input"
+          ref="criteriaTextarea"
+          placeholder="I would rather not receive a Barca shirt, because I am a Real Madrid fan!"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="customize-selection__actions">
+        <button type="button" class="customize-selection__cancel button button--secondary" on:click="/closeModal">
+          Cancel
+        </button>
+        <button type="button" class="customize-selection__proceed button button--primary" on:click="/handleProceed">
+          Proceed to Cart
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% stylesheet %}
+  customize-selection-popup {
+    display: block;
+    width: 100%;
+  }
+
+  .customize-selection__trigger {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .customize-selection__icon {
+    display: inline-flex;
+    flex-shrink: 0;
+  }
+
+  /* Overlay */
+  .customize-selection__overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: calc(var(--layer-modal, 1000) - 1);
+    backdrop-filter: blur(4px);
+    animation: csp-fadeIn 0.2s ease-out;
+  }
+
+  /* Modal */
+  .customize-selection__modal {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: var(--layer-modal, 1000);
+    width: min(520px, 92vw);
+    max-height: 90vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+    animation: csp-slideUp 0.3s ease-out;
+  }
+
+  .customize-selection__modal-inner {
+    padding: 28px 30px 24px;
+  }
+
+  /* Header */
+  .customize-selection__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+
+  .customize-selection__title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    margin: 0;
+    color: #1a1a1a;
+    letter-spacing: -0.01em;
+  }
+
+  .customize-selection__close {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    color: #666;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    line-height: 0;
+  }
+
+  .customize-selection__close:hover {
+    background: #f0f0f0;
+    color: #1a1a1a;
+  }
+
+  /* Sections */
+  .customize-selection__section {
+    margin-bottom: 20px;
+  }
+
+  .customize-selection__section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: #1a1a1a;
+    margin: 0 0 12px 0;
+    text-transform: uppercase;
+  }
+
+  /* Nations Grid */
+  .customize-selection__nations-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px 16px;
+  }
+
+  .customize-selection__nation-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1a1a1a;
+    user-select: none;
+    transition: opacity 0.15s;
+  }
+
+  .customize-selection__nation-item:has(input:disabled) {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .customize-selection__nation-checkbox {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: #1a1a1a;
+    flex-shrink: 0;
+  }
+
+  .customize-selection__nation-checkbox:disabled {
+    cursor: not-allowed;
+  }
+
+  .customize-selection__nation-flag {
+    font-size: 1.15rem;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .customize-selection__nation-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.03em;
+  }
+
+  /* Textareas */
+  .customize-selection__textarea {
+    width: 100%;
+    min-height: 80px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 14px 16px;
+    font-size: 0.875rem;
+    font-family: inherit;
+    resize: vertical;
+    color: #1a1a1a;
+    background: #fff;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+  }
+
+  .customize-selection__textarea::placeholder {
+    color: #999;
+  }
+
+  .customize-selection__textarea:focus {
+    outline: none;
+    border-color: #1a1a1a;
+  }
+
+  /* Actions */
+  .customize-selection__actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+  }
+
+  .customize-selection__cancel,
+  .customize-selection__proceed {
+    flex: 1;
+    padding: 14px 24px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+
+  .customize-selection__cancel {
+    background: #fff;
+    color: #1a1a1a;
+    border: 2px solid #e0e0e0;
+  }
+
+  .customize-selection__cancel:hover {
+    border-color: #1a1a1a;
+  }
+
+  .customize-selection__proceed {
+    background: #c8a21c;
+    color: #fff;
+    border: 2px solid #c8a21c;
+  }
+
+  .customize-selection__proceed:hover {
+    background: #b08e15;
+    border-color: #b08e15;
+  }
+
+  /* Animations */
+  @keyframes csp-fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes csp-slideUp {
+    from {
+      opacity: 0;
+      transform: translate(-50%, -46%);
+    }
+    to {
+      opacity: 1;
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  /* Mobile */
+  @media screen and (max-width: 749px) {
+    .customize-selection__modal {
+      width: 100%;
+      max-height: 85vh;
+      top: auto;
+      bottom: 0;
+      left: 0;
+      transform: none;
+      border-radius: 20px 20px 0 0;
+      animation: csp-slideUpMobile 0.3s ease-out;
+    }
+
+    .customize-selection__modal-inner {
+      padding: 24px 20px 20px;
+    }
+
+    .customize-selection__nations-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 6px 12px;
+    }
+
+    .customize-selection__title {
+      font-size: 1.15rem;
+    }
+
+    .customize-selection__actions {
+      flex-direction: column;
+    }
+  }
+
+  @keyframes csp-slideUpMobile {
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+{% endstylesheet %}
+
+<script
+  src="{{ 'customize-selection-popup.js' | asset_url }}"
+  type="module"
+  fetchpriority="low"
+></script>
+
+{% schema %}
+{
+  "name": "Customize Selection Popup",
+  "tag": "customize-selection-popup",
+  "settings": [
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Customize Your Selection"
+    },
+    {
+      "type": "select",
+      "id": "button_style",
+      "label": "Button style",
+      "options": [
+        {
+          "value": "primary",
+          "label": "Primary"
+        },
+        {
+          "value": "secondary",
+          "label": "Secondary"
+        }
+      ],
+      "default": "secondary"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-start",
+      "label": "Left",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "padding-inline-end",
+      "label": "Right",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    }
+  ],
+  "presets": [
+    {
+      "name": "Customize Selection Popup",
+      "category": "Product"
+    }
+  ]
+}
+{% endschema %}
